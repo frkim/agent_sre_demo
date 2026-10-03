@@ -151,7 +151,7 @@ upload_knowledge() {
   fi
   out_file="${WORK_DIR}/knowledge-upload-response.json"
   # Upload from inside WORK_DIR: relative paths keep curl portable across Git Bash and Linux.
-  status="$(cd "${WORK_DIR}" && curl -sS -o "$(basename "${out_file}")" -w '%{http_code}' -X POST "${AGENT_ENDPOINT}/api/v1/AgentMemory/upload" -H "Authorization: Bearer ${TOKEN}" -F "triggerIndexing=true" "${args[@]}" || true)"
+  status="$(cd "${WORK_DIR}" || exit 1; curl -sS -o "$(basename "${out_file}")" -w '%{http_code}' -X POST "${AGENT_ENDPOINT}/api/v1/AgentMemory/upload" -H "Authorization: Bearer ${TOKEN}" -F "triggerIndexing=true" "${args[@]}" || true)"
   status="${status:-000}"
   case "${status}" in
     200|201|202)
