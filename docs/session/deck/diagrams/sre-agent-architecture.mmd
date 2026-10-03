@@ -1,0 +1,33 @@
+---
+title: Azure SRE Agent operating model
+---
+flowchart TB
+  subgraph S[1. Signals and triggers]
+    AM[Azure Monitor]
+    PD[PagerDuty / ServiceNow]
+    HT[HTTP triggers / scheduled tasks]
+  end
+  subgraph A[2. Azure SRE Agent]
+    RP[Response plans]
+    CA[Custom agents and skills]
+    MEM[Memory and knowledge]
+    GOV[Roles, run modes, RBAC, policies]
+  end
+  subgraph C[3. Context sources]
+    AZ[Azure Monitor, App Insights, Log Analytics]
+    ARG[Resource Graph and ARM]
+    GIT[GitHub / Azure DevOps]
+    MCP[MCP and managed connectors]
+  end
+  subgraph O[4. Governed outcomes]
+    RCA[Root cause summary]
+    ISSUE[GitHub issue / work item]
+    FIX[Approved Azure CLI / ARM action]
+    REPORT[Teams, Outlook, Live Reports]
+  end
+  S --> RP
+  RP --> CA
+  GOV --> CA
+  CA <--> MEM
+  CA <--> C
+  CA --> O

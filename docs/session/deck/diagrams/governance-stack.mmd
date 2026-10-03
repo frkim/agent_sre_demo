@@ -1,0 +1,12 @@
+---
+title: Four-layer governance stack
+---
+flowchart LR
+  U[User roles
+Reader / Standard / Author / Admin] --> R[Run modes
+Review default / Autonomous opt-in]
+  R --> P[Agent permissions
+Reader or Privileged RBAC]
+  P --> T[Tool policies and hooks
+Allow / Ask / Deny]
+  T --> A[Approved action]

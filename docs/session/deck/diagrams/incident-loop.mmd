@@ -1,0 +1,16 @@
+---
+title: Incident response loop
+---
+flowchart LR
+  A[Alert or trigger] --> B[Gather logs, metrics, topology, code]
+  B --> C[Search memory and knowledge]
+  C --> D{Classify symptom}
+  D -->|Code defect| E[File GitHub issue
+with impact + file:line]
+  D -->|Config fault| F{Run mode}
+  F -->|Review| G[Human approve / deny]
+  F -->|Autonomous| H[Execute scoped Azure CLI / ARM action]
+  G --> H
+  H --> I[Verify recovery]
+  E --> J[Learn for next incident]
+  I --> J

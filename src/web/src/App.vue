@@ -277,7 +277,7 @@ onUnmounted(() => {
       </v-container>
     </v-main>
 
-    <v-footer class="justify-center text-caption" border>{{ footerText }}</v-footer>
+    <v-footer class="justify-center text-caption flex-grow-0" border>{{ footerText }}</v-footer>
 
     <v-dialog v-model="detailOpen" max-width="620">
       <v-card rounded="xl">

@@ -1,0 +1,287 @@
+1
+00:00:00,550 --> 00:00:01,569
+Hi, and welcome.
+
+2
+00:00:01,569 --> 00:00:07,362
+In the next few minutes you'll watch Azure SRE Agent operate a real application on Azure.
+
+3
+00:00:07,362 --> 00:00:18,456
+It will detect two different production incidents, find the root cause of each, and respond the right way: opening a GitHub issue for a code defect, and repairing Azure configuration for a platform fault.
+
+4
+00:00:18,456 --> 00:00:23,060
+Everything you'll see was deployed and recorded live from this repository.
+
+5
+00:00:24,560 --> 00:00:32,262
+Azure SRE Agent is an AI site reliability engineer for Azure, generally available since March 2026.
+
+6
+00:00:32,262 --> 00:00:43,392
+It picks up incidents from Azure Monitor, PagerDuty or ServiceNow, reads your telemetry, your resources and your code, and then acts, but only within the permissions you grant it.
+
+7
+00:00:43,392 --> 00:00:53,620
+You choose review mode or autonomous mode, every action is audited, and you extend it with skills, subagents, MCP connectors and scheduled tasks.
+
+8
+00:00:55,127 --> 00:00:59,199
+Our test subject is Contoso Trek, an outdoor gear store.
+
+9
+00:00:59,199 --> 00:01:07,877
+A Vue front end and a Python FastAPI back end run on Azure Container Apps, and send OpenTelemetry to Application Insights.
+
+10
+00:01:07,877 --> 00:01:15,930
+Two log alerts watch for HTTP 500 and HTTP 503 errors, and route to the SRE Agent.
+
+11
+00:01:15,930 --> 00:01:25,942
+The agent has its own managed identity with least-privilege roles, read access to the GitHub repository, and a GitHub MCP connector to file issues.
+
+12
+00:01:27,437 --> 00:01:31,185
+The whole environment is deployed by a GitHub Actions workflow.
+
+13
+00:01:31,185 --> 00:01:41,978
+It validates the code, the Bicep and the scripts, deploys the infrastructure and the container images, configures the agent through its data plane API, and finishes with a smoke test.
+
+14
+00:01:41,978 --> 00:01:46,040
+One push to main, and about six minutes later, everything is live.
+
+15
+00:01:48,770 --> 00:02:00,378
+The agent's behaviour lives in Git as well: global instructions, a knowledge base, two skills, two specialised subagents, and response plans that route each alert to the right subagent.
+
+16
+00:02:00,378 --> 00:02:01,953
+Notice the tool grants.
+
+17
+00:02:01,953 --> 00:02:05,246
+The code investigator has no Azure write tools.
+
+18
+00:02:05,246 --> 00:02:11,808
+The platform operator can run Azure CLI writes, but has no terminal and no GitHub access.
+
+19
+00:02:11,808 --> 00:02:16,929
+The script reads everything back to prove that what's deployed matches the source.
+
+20
+00:02:18,440 --> 00:02:20,036
+Here is the storefront.
+
+21
+00:02:20,036 --> 00:02:25,120
+The banner at the top reflects live health: green means all systems operational.
+
+22
+00:02:25,120 --> 00:02:30,012
+Search, sorting, filtering and product details all work as expected.
+
+23
+00:02:40,480 --> 00:02:43,014
+Scenario one: a code defect.
+
+24
+00:02:43,014 --> 00:02:47,136
+Some product pages fail with an HTTP 500.
+
+25
+00:02:47,136 --> 00:02:56,511
+No Azure setting can fix this, so the right response is to find the faulty line of code and open a GitHub issue, without touching any Azure resource.
+
+26
+00:02:58,013 --> 00:02:59,705
+Let's open a climbing harness.
+
+27
+00:02:59,705 --> 00:03:03,203
+The product fails to load, and the banner turns amber.
+
+28
+00:03:03,203 --> 00:03:09,369
+The exception lands in Application Insights, and a few minutes later the Azure Monitor alert fires.
+
+29
+00:03:19,147 --> 00:03:23,484
+This is the agent's own investigation thread, retrieved from its API.
+
+30
+00:03:23,484 --> 00:03:27,450
+The alert arrives, and the code investigator subagent takes over.
+
+31
+00:03:27,450 --> 00:03:31,116
+It loads its diagnostic skill and searches the knowledge base.
+
+32
+00:03:31,116 --> 00:03:39,553
+It queries Log Analytics for the blast radius and the stack trace, then reads the source code: main dot py and catalog dot py.
+
+33
+00:03:39,553 --> 00:03:44,241
+It searches GitHub for an existing issue, finds none, and files a new one.
+
+34
+00:03:44,241 --> 00:03:49,205
+Then it hands the fix to GitHub Copilot coding agent, and closes the alert.
+
+35
+00:03:49,205 --> 00:03:57,414
+From alert to issue and pull request: about two and a half minutes, with no human involved, and no Azure resource modified.
+
+36
+00:03:59,713 --> 00:04:02,018
+Here is the issue the agent opened.
+
+37
+00:04:02,018 --> 00:04:13,701
+It has the impact window, the number of failed requests, the root cause with a permalink to catalog dot py, line one hundred nineteen, the stack trace excerpt, and a suggested fix.
+
+38
+00:04:13,701 --> 00:04:16,718
+It is labelled, and assigned to Copilot.
+
+39
+00:04:21,247 --> 00:04:29,021
+And GitHub Copilot coding agent has already opened a draft pull request: a guarded division, plus regression tests.
+
+40
+00:04:29,021 --> 00:04:31,221
+A human reviews and merges it.
+
+41
+00:04:31,221 --> 00:04:37,326
+The SRE agent diagnoses; Copilot writes the code; your team stays in control.
+
+42
+00:04:38,827 --> 00:04:42,671
+Scenario two is the opposite case: a platform fault.
+
+43
+00:04:42,671 --> 00:04:49,053
+A bad configuration change takes the catalog down with HTTP 503 errors.
+
+44
+00:04:49,053 --> 00:04:53,632
+The code is fine, so the right response is to repair the Azure configuration.
+
+45
+00:04:55,127 --> 00:05:03,851
+We simulate a risky change: one environment variable on the API container app now points to an inventory backend that this build doesn't support.
+
+46
+00:05:03,851 --> 00:05:06,927
+Container Apps rolls out a new revision.
+
+47
+00:05:08,427 --> 00:05:11,141
+Within seconds, the banner turns red.
+
+48
+00:05:11,141 --> 00:05:17,631
+The catalog is empty, and every catalog request returns HTTP 503.
+
+49
+00:05:17,631 --> 00:05:20,215
+This is a full outage for customers.
+
+50
+00:05:21,707 --> 00:05:27,810
+The availability alert fires, and this time the response plan routes it to the platform operator subagent.
+
+51
+00:05:27,810 --> 00:05:38,868
+It confirms the 503 errors and the configuration error in the logs, checks the Activity Log to find the change that caused it, and restores the correct value with an Azure CLI update.
+
+52
+00:05:38,868 --> 00:05:43,844
+Then it verifies that the new revision is healthy and the catalog is serving again.
+
+53
+00:05:46,387 --> 00:05:48,632
+And the storefront is back to green.
+
+54
+00:05:48,632 --> 00:05:53,740
+No redeploy, no code change, and no engineer paged in the middle of the night.
+
+55
+00:05:58,667 --> 00:06:00,984
+What makes this safe is governance.
+
+56
+00:06:00,984 --> 00:06:06,405
+The agent uses a managed identity with built-in roles, scoped to one resource group.
+
+57
+00:06:06,405 --> 00:06:09,314
+Each subagent only has the tools it needs.
+
+58
+00:06:09,314 --> 00:06:16,117
+Start in review mode, where a human approves each action, and move to autonomous mode where you're confident.
+
+59
+00:06:16,117 --> 00:06:20,107
+And every query and command is visible in the thread for audit.
+
+60
+00:06:21,633 --> 00:06:24,239
+Pricing is based on Azure Agent Units.
+
+61
+00:06:24,239 --> 00:06:34,708
+Each agent consumes four units per hour while it exists, which is about two thousand nine hundred units a month, or roughly two hundred ninety dollars at ten cents per unit in East US.
+
+62
+00:06:34,708 --> 00:06:43,746
+On top of that, active work is metered by tokens: an incident investigation costs roughly twelve to thirty-five units depending on the model.
+
+63
+00:06:43,746 --> 00:06:48,866
+You can cap monthly usage, and a thirty-day trial waives the always-on charge.
+
+64
+00:06:48,866 --> 00:06:51,967
+Always confirm regional prices in the calculator.
+
+65
+00:06:53,467 --> 00:06:54,931
+Plan for a few limits.
+
+66
+00:06:54,931 --> 00:06:58,669
+The agent is available in more than twenty Azure regions.
+
+67
+00:06:58,669 --> 00:07:02,515
+It can only act where its identity has permissions, which is the point.
+
+68
+00:07:02,515 --> 00:07:08,741
+Alert-driven flows inherit your alert latency, typically five to ten minutes for log alerts.
+
+69
+00:07:08,741 --> 00:07:12,635
+Connectors have tool budgets, and some newer features are still in preview.
+
+70
+00:07:14,137 --> 00:07:21,911
+To get started, fork this repository and run the deploy workflow, or point the agent at one of your own resource groups in review mode.
+
+71
+00:07:21,911 --> 00:07:26,623
+Encode your runbooks as skills, and route your alerts with response plans.
+
+72
+00:07:26,623 --> 00:07:27,716
+Thanks for watching.

@@ -1,0 +1,82 @@
+[
+  {
+    "id": "intro",
+    "text": "Hi, and welcome. In the next few minutes you'll watch Azure SRE Agent operate a real application on Azure. It will detect two different production incidents, find the root cause of each, and respond the right way: opening a GitHub issue for a code defect, and repairing Azure configuration for a platform fault. Everything you'll see was deployed and recorded live from this repository."
+  },
+  {
+    "id": "what",
+    "text": "Azure SRE Agent is an AI site reliability engineer for Azure, generally available since March 2026. It picks up incidents from Azure Monitor, PagerDuty or ServiceNow, reads your telemetry, your resources and your code, and then acts, but only within the permissions you grant it. You choose review mode or autonomous mode, every action is audited, and you extend it with skills, subagents, MCP connectors and scheduled tasks."
+  },
+  {
+    "id": "architecture",
+    "text": "Our test subject is Contoso Trek, an outdoor gear store. A Vue front end and a Python FastAPI back end run on Azure Container Apps, and send OpenTelemetry to Application Insights. Two log alerts watch for HTTP 500 and HTTP 503 errors, and route to the SRE Agent. The agent has its own managed identity with least-privilege roles, read access to the GitHub repository, and a GitHub MCP connector to file issues."
+  },
+  {
+    "id": "pipeline",
+    "text": "The whole environment is deployed by a GitHub Actions workflow. It validates the code, the Bicep and the scripts, deploys the infrastructure and the container images, configures the agent through its data plane API, and finishes with a smoke test. One push to main, and about six minutes later, everything is live."
+  },
+  {
+    "id": "config",
+    "text": "The agent's behaviour lives in Git as well: global instructions, a knowledge base, two skills, two specialised subagents, and response plans that route each alert to the right subagent. Notice the tool grants. The code investigator has no Azure write tools. The platform operator can run Azure CLI writes, but has no terminal and no GitHub access. The script reads everything back to prove that what's deployed matches the source."
+  },
+  {
+    "id": "storefront",
+    "text": "Here is the storefront. The banner at the top reflects live health: green means all systems operational. Search, sorting, filtering and product details all work as expected."
+  },
+  {
+    "id": "s1",
+    "text": "Scenario one: a code defect. Some product pages fail with an HTTP 500. No Azure setting can fix this, so the right response is to find the faulty line of code and open a GitHub issue, without touching any Azure resource."
+  },
+  {
+    "id": "failure",
+    "text": "Let's open a climbing harness. The product fails to load, and the banner turns amber. The exception lands in Application Insights, and a few minutes later the Azure Monitor alert fires."
+  },
+  {
+    "id": "transcript_s1",
+    "text": "This is the agent's own investigation thread, retrieved from its API. The alert arrives, and the code investigator subagent takes over. It loads its diagnostic skill and searches the knowledge base. It queries Log Analytics for the blast radius and the stack trace, then reads the source code: main dot py and catalog dot py. It searches GitHub for an existing issue, finds none, and files a new one. Then it hands the fix to GitHub Copilot coding agent, and closes the alert. From alert to issue and pull request: about two and a half minutes, with no human involved, and no Azure resource modified."
+  },
+  {
+    "id": "github_issue",
+    "text": "Here is the issue the agent opened. It has the impact window, the number of failed requests, the root cause with a permalink to catalog dot py, line one hundred nineteen, the stack trace excerpt, and a suggested fix. It is labelled, and assigned to Copilot."
+  },
+  {
+    "id": "github_pr",
+    "text": "And GitHub Copilot coding agent has already opened a draft pull request: a guarded division, plus regression tests. A human reviews and merges it. The SRE agent diagnoses; Copilot writes the code; your team stays in control."
+  },
+  {
+    "id": "s2",
+    "text": "Scenario two is the opposite case: a platform fault. A bad configuration change takes the catalog down with HTTP 503 errors. The code is fine, so the right response is to repair the Azure configuration."
+  },
+  {
+    "id": "break",
+    "text": "We simulate a risky change: one environment variable on the API container app now points to an inventory backend that this build doesn't support. Container Apps rolls out a new revision."
+  },
+  {
+    "id": "outage",
+    "text": "Within seconds, the banner turns red. The catalog is empty, and every catalog request returns HTTP 503. This is a full outage for customers."
+  },
+  {
+    "id": "transcript_s2",
+    "text": "The availability alert fires, and this time the response plan routes it to the platform operator subagent. It confirms the 503 errors and the configuration error in the logs, checks the Activity Log to find the change that caused it, and restores the correct value with an Azure CLI update. Then it verifies that the new revision is healthy and the catalog is serving again."
+  },
+  {
+    "id": "recovered",
+    "text": "And the storefront is back to green. No redeploy, no code change, and no engineer paged in the middle of the night."
+  },
+  {
+    "id": "governance",
+    "text": "What makes this safe is governance. The agent uses a managed identity with built-in roles, scoped to one resource group. Each subagent only has the tools it needs. Start in review mode, where a human approves each action, and move to autonomous mode where you're confident. And every query and command is visible in the thread for audit."
+  },
+  {
+    "id": "pricing",
+    "text": "Pricing is based on Azure Agent Units. Each agent consumes four units per hour while it exists, which is about two thousand nine hundred units a month, or roughly two hundred ninety dollars at ten cents per unit in East US. On top of that, active work is metered by tokens: an incident investigation costs roughly twelve to thirty-five units depending on the model. You can cap monthly usage, and a thirty-day trial waives the always-on charge. Always confirm regional prices in the calculator."
+  },
+  {
+    "id": "limits",
+    "text": "Plan for a few limits. The agent is available in more than twenty Azure regions. It can only act where its identity has permissions, which is the point. Alert-driven flows inherit your alert latency, typically five to ten minutes for log alerts. Connectors have tool budgets, and some newer features are still in preview."
+  },
+  {
+    "id": "outro",
+    "text": "To get started, fork this repository and run the deploy workflow, or point the agent at one of your own resource groups in review mode. Encode your runbooks as skills, and route your alerts with response plans. Thanks for watching."
+  }
+]
