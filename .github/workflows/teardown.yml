@@ -1,0 +1,63 @@
+name: Teardown Contoso Trek SRE demo
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment_name:
+        description: Environment name to delete
+        type: string
+        default: demo
+        required: true
+      location:
+        description: Azure region
+        type: string
+        default: francecentral
+      confirm:
+        description: Type the environment name to confirm deletion
+        type: string
+        required: true
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: teardown-${{ github.event.inputs.environment_name }}
+  cancel-in-progress: false
+
+env:
+  ENV_NAME: ${{ github.event.inputs.environment_name }}
+  LOCATION: ${{ github.event.inputs.location }}
+
+jobs:
+  teardown:
+    runs-on: ubuntu-latest
+    environment: demo
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, node24
+
+      - name: Azure login with OIDC
+        if: ${{ vars.AZURE_CLIENT_ID != '' }}
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0, node24
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Azure login with credentials fallback
+        if: ${{ vars.AZURE_CLIENT_ID == '' }}
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0, node24
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Confirm and delete
+        env:
+          CONFIRM_INPUT: ${{ github.event.inputs.confirm }}
+          CONFIRM_TEARDOWN: ${{ github.event.inputs.confirm }}
+        run: |
+          if [ "${CONFIRM_INPUT}" != "${ENV_NAME}" ]; then
+            echo "Confirmation must equal environment name (${ENV_NAME})." >&2
+            exit 2
+          fi
+          bash scripts/teardown.sh

@@ -1,0 +1,10 @@
+using './main.bicep'
+
+param environmentName = 'demo'
+param location = 'francecentral'
+param apiImage = ''
+param webImage = ''
+param owner = 'frkim'
+param costCenter = 'demo'
+param deployerPrincipalId = ''
+param deployerPrincipalType = 'ServicePrincipal'
