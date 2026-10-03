@@ -230,6 +230,6 @@ output sreAgentName string = sreAgent.name
 output sreAgentIdentityId string = sreAgentIdentity.id
 output sreAgentIdentityPrincipalId string = sreAgentIdentity.properties.principalId
 #disable-next-line use-resource-symbol-reference // The preview agentEndpoint property is not exposed on the Bicep resource type yet.
-output sreAgentEndpoint string = reference(sreAgent.id, '2026-01-01').properties.agentEndpoint
+output sreAgentEndpoint string = reference(sreAgent.id, '2026-01-01').agentEndpoint
 output sreAgentAdministratorRoleName string = 'SRE Agent Administrator'
 output sreAgentAdministratorRoleId string = sreAgentAdministratorRoleId
