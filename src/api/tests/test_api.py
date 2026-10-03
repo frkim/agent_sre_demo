@@ -49,15 +49,25 @@ def test_products_support_paging_sort_search_and_filter() -> None:
     assert filtered_payload["items"][0]["id"] == "water-drybag-trio"
 
 
-def test_product_detail_for_non_climbing_product_includes_unit_price() -> None:
+@pytest.mark.parametrize(
+    ("product_id", "pack_size", "unit_price"),
+    [
+        ("camp-aurora-2p", 1, 249.99),
+        ("apparel-socks-3", 3, 12.0),
+        ("water-drybag-trio", 3, 14.83),
+    ],
+)
+def test_product_detail_for_non_climbing_product_includes_unit_price(
+    product_id: str, pack_size: int, unit_price: float
+) -> None:
     client = client_for()
 
-    response = client.get("/api/v1/products/apparel-socks-3")
+    response = client.get(f"/api/v1/products/{product_id}")
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload["packSize"] == 3
-    assert payload["unitPrice"] == 12.0
+    assert payload["packSize"] == pack_size
+    assert payload["unitPrice"] == unit_price
 
 
 def test_config_fault_returns_503_outage_status_and_live_health() -> None:
@@ -76,10 +86,22 @@ def test_config_fault_returns_503_outage_status_and_live_health() -> None:
     assert live.status_code == 200
 
 
-@pytest.mark.xfail(strict=True, reason="Known defect – demo scenario 1")
-def test_climbing_product_detail_returns_200() -> None:
+@pytest.mark.parametrize(
+    "product_id",
+    [
+        "climb-cragdraw-6",
+        "climb-chalk-cloud",
+        "climb-belay-pro",
+        "climb-rope-zenith",
+        "climb-harness-axis",
+    ],
+)
+def test_climbing_product_detail_returns_200(product_id: str) -> None:
     client = client_for()
 
-    response = client.get("/api/v1/products/climb-cragdraw-6")
+    response = client.get(f"/api/v1/products/{product_id}")
 
     assert response.status_code == 200
+    payload = response.json()
+    assert payload["packSize"] == 0
+    assert payload["unitPrice"] == payload["price"]
