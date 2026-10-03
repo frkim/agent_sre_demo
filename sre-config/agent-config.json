@@ -1,6 +1,18 @@
 {
   "$comment": "Declarative SRE Agent configuration. Applied by scripts/configure-agent.sh. Tool grants are cross-checked against GET /api/v2/agent/tools because the API accepts unknown names silently.",
   "customInstructions": "custom-instructions.md",
+  "githubMcpTools": [
+    "issue_write",
+    "issue_read",
+    "list_issues",
+    "search_issues",
+    "add_issue_comment",
+    "get_file_contents",
+    "search_code",
+    "list_commits",
+    "get_commit",
+    "assign_copilot_to_issue"
+  ],
   "knowledgeBase": [
     "knowledge-base/contoso-trek-environment.md"
   ],
@@ -24,7 +36,15 @@
         "FileSearch",
         "GrepSearch",
         "ReadFile",
-        "RunInTerminal"
+        "RunInTerminal",
+        "github_issue_write",
+        "github_issue_read",
+        "github_search_issues",
+        "github_add_issue_comment",
+        "github_get_file_contents",
+        "github_search_code",
+        "github_list_commits",
+        "github_assign_copilot_to_issue"
       ]
     },
     {

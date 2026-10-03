@@ -7,6 +7,14 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
   exit 1
 fi
 
+# Windows-native jq/az emit CRLF under Git Bash; strip CR so values and paths stay clean.
+case "$(uname -s)" in
+  MINGW* | MSYS* | CYGWIN*)
+    jq() { command jq "$@" | tr -d '\r'; return "${PIPESTATUS[0]}"; }
+    az() { command az "$@" | tr -d '\r'; return "${PIPESTATUS[0]}"; }
+    ;;
+esac
+
 ENV_NAME="${ENV_NAME:-${AZURE_ENV_NAME:-demo}}"
 LOCATION="${LOCATION:-${AZURE_LOCATION:-francecentral}}"
 RG="${RG:-${AZURE_RESOURCE_GROUP:-rg-sre-agent-demo-${ENV_NAME}}}"

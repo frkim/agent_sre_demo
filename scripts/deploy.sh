@@ -83,8 +83,8 @@ wait_containerapp_healthy() {
   deadline=$((SECONDS + 600))
   echo "==> Waiting for ${app_name} revision to become healthy..."
   while (( SECONDS < deadline )); do
-    state="$(az containerapp revision list --resource-group "${RG}" --name "${app_name}" --query "[?properties.active].[-1].properties.healthState" --output tsv 2>/dev/null || true)"
-    running="$(az containerapp revision list --resource-group "${RG}" --name "${app_name}" --query "[?properties.active].[-1].properties.runningState" --output tsv 2>/dev/null || true)"
+    state="$(az containerapp revision list --resource-group "${RG}" --name "${app_name}" --query "[?properties.active] | [-1].properties.healthState" --output tsv 2>/dev/null || true)"
+    running="$(az containerapp revision list --resource-group "${RG}" --name "${app_name}" --query "[?properties.active] | [-1].properties.runningState" --output tsv 2>/dev/null || true)"
     if [[ "${state}" == "Healthy" || "${running}" == "Running" ]]; then
       echo "  ${app_name}: ${state:-${running}}"
       return 0

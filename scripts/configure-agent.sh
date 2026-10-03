@@ -109,14 +109,20 @@ connect_code_access() {
   echo "==> Connecting Code Access for ${GITHUB_REPOSITORY} (${branch})"
   api_call PUT "/api/v2/repos/${repo_name}" "${body_file}" "${WORK_DIR}/code-access-response.json" || echo "  WARNING: Code Access failed; configure it in Builder > Code Access."
 
+  # GitHub issue/PR operations come from the GitHub MCP server exposed as an agent connector.
+  # Tools surface as "github_<tool>"; only the read + issue tools below are visible to the agent.
   connector_body="${WORK_DIR}/github-connector.json"
   jq -n \
     --arg repo "${GITHUB_REPOSITORY}" \
-    --arg pat "${SRE_AGENT_GITHUB_PAT}" \
-    --arg branch "${branch}" \
-    '{name: "github", type: "Connector", properties: {name: "github", connectorType: "GitHub", repository: $repo, pat: $pat, branch: $branch}}' > "${connector_body}"
-  echo "==> Connecting GitHub issue connector (best effort)"
-  api_call PUT "/api/v2/extendedAgent/connectors/github" "${connector_body}" "${WORK_DIR}/github-connector-response.json" || echo "  WARNING: GitHub connector route was unavailable; Code Access remains configured."
+    --arg auth "Bearer ${SRE_AGENT_GITHUB_PAT}" \
+    --argjson tools "$(jq -c '.githubMcpTools // [] | map("github_" + .)' "${CONFIG_FILE}")" \
+    '{name: "github", type: "AgentConnector", properties: {dataConnectorType: "Mcp", dataSource: $repo,
+      extendedProperties: {type: "http", endpoint: "https://api.githubcopilot.com/mcp/", authType: "CustomHeaders",
+        Authorization: $auth, toolsVisibleToMetaAgent: $tools, selectedTools: $tools},
+      identity: "", keyVaultUri: null, endpoint: null, source: "Agent"}}' > "${connector_body}"
+  echo "==> Connecting GitHub MCP connector (issues, code search)"
+  api_call PUT "/api/v2/extendedAgent/connectors/github" "${connector_body}" "${WORK_DIR}/github-connector-response.json" || echo "  WARNING: GitHub MCP connector failed; add it in Builder > Connectors."
+  rm -f "${connector_body}" "${WORK_DIR}/github-connector-response.json"
 }
 
 apply_custom_instructions() {
@@ -136,7 +142,7 @@ upload_knowledge() {
   while IFS= read -r rel; do
     staged="${WORK_DIR}/$(basename "${rel}")"
     render_file "${CONFIG_DIR}/${rel}" > "${staged}"
-    args+=( -F "files=@${staged};type=text/markdown" )
+    args+=( -F "files=@$(basename "${rel}");type=text/plain" )
     echo "  ${rel}"
   done < <(jq -r '.knowledgeBase[]' "${CONFIG_FILE}")
 
@@ -144,7 +150,9 @@ upload_knowledge() {
     return 0
   fi
   out_file="${WORK_DIR}/knowledge-upload-response.json"
-  status="$(curl -sS -o "${out_file}" -w '%{http_code}' -X POST "${AGENT_ENDPOINT}/api/v1/AgentMemory/upload" -H "Authorization: Bearer ${TOKEN}" -F "triggerIndexing=true" "${args[@]}" || echo '000')"
+  # Upload from inside WORK_DIR: relative paths keep curl portable across Git Bash and Linux.
+  status="$(cd "${WORK_DIR}" && curl -sS -o "$(basename "${out_file}")" -w '%{http_code}' -X POST "${AGENT_ENDPOINT}/api/v1/AgentMemory/upload" -H "Authorization: Bearer ${TOKEN}" -F "triggerIndexing=true" "${args[@]}" || true)"
+  status="${status:-000}"
   case "${status}" in
     200|201|202)
       if json_body_ok "${out_file}"; then echo "  Knowledge uploaded."; else echo "  WARNING: knowledge upload did not return JSON."; fi
