@@ -427,3 +427,19 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Contoso Trek app local artifacts
+.venv/
+**/.venv/
+dist/
+**/dist/
+node_modules/
+**/node_modules/
+__pycache__/
+**/__pycache__/
+.pytest_cache/
+.ruff_cache/
+
+# Contoso Trek local deployment artifacts
+.sre-agent-work/
+.sre-deploy-outputs.json
