@@ -116,5 +116,5 @@ def query_products(
 
 def build_detail(product: Product) -> ProductDetail:
     """Build product detail including computed unit price."""
-    unit_price = round(product.price / product.pack_size, 2)  # price per unit for multi-packs
+    unit_price = round(product.price / product.pack_size, 2) if product.pack_size > 0 else product.price
     return ProductDetail(**product.model_dump(), unit_price=unit_price)
